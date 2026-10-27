@@ -8,6 +8,7 @@ import json
 import urllib.error
 import urllib.request
 from .const import API_URL
+from .auth import renew
 
 ACTIVE_QUERY = "query GetActiveChargingSession { getActiveSession { id status } }"
 SESSION_QUERY = """query ChargingSession($id: ID!) {
@@ -31,8 +32,24 @@ class EweGoAuthenticationError(EweGoApiError):
 class EweGoClient:
     """Client with externally supplied access token (no unverified login flow)."""
 
-    def __init__(self, token: str) -> None:
+    def __init__(self, token: str, *, email=None, tokens=None, update_tokens=None) -> None:
         self._token = token
+        self._email = email
+        self._tokens = tokens
+        self._update_tokens = update_tokens
+
+    async def _ensure_token(self):
+        if self._tokens is None:
+            return
+        try:
+            new_tokens = await renew(self._email, self._tokens)
+        except Exception as exc:
+            raise EweGoAuthenticationError("Cognito token refresh failed") from exc
+        if new_tokens != self._tokens:
+            self._tokens = new_tokens
+            self._token = new_tokens["access_token"]
+            if self._update_tokens:
+                self._update_tokens(new_tokens)
 
     def _request(self, query: str, variables: dict | None = None) -> dict:
         payload = json.dumps({"query": query, "variables": variables or {}}).encode()
@@ -60,6 +77,7 @@ class EweGoClient:
         return result["data"]
 
     async def execute(self, query: str, variables: dict | None = None) -> dict:
+        await self._ensure_token()
         return await asyncio.to_thread(self._request, query, variables)
 
     async def active_session(self) -> dict | None:
