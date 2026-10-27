@@ -62,7 +62,7 @@ class EweGoClient:
             if self._permissions_token and time.monotonic() < self._permissions_expiration:
                 return
             try:
-                token, expiry = await exchange_token(self._tokens["id_token"])
+                token, expiry = await exchange_token(self._tokens["access_token"])
             except PermissionsUnauthorized as exc:
                 raise EweGoAuthenticationError(str(exc)) from exc
             except PermissionsError as exc:
