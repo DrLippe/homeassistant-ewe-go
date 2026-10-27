@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EWE Go",
+        "description": "Experimental: enter a valid API bearer token. Automatic login is not implemented.",
+        "data": {
+          "access_token": "Access token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid token"
+    }
+  }
+}
