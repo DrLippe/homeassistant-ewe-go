@@ -6,7 +6,8 @@
         "description": "Anmeldung mit E-Mail und Passwort (Cognito SRP).",
         "data": {
           "email": "E-Mail-Adresse",
-          "password": "Passwort"
+          "password": "Passwort",
+          "api_key": "Android-API-Key"
         }
       }
     },
