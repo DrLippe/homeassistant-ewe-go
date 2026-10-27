@@ -1,14 +1,14 @@
-"""Constants for EWE Go."""
+"""Constants for EWE Go Android API."""
 DOMAIN = "ewe_go"
 API_URL = "https://app-backend.ewe-go.de/api"
 CONF_ACCESS_TOKEN = "access_token"
-
-# Confirmed from the EWE Go web login InitiateAuth request.
-COGNITO_REGION = "eu-central-1"
-COGNITO_APP_CLIENT_ID = "6eqi7k9jed2q0v8afbejv87qtu"
-COGNITO_AUTH_FLOW = "USER_SRP_AUTH"
-# User Pool ID must be identified before implementing SRP's password-claim proof.
-COGNITO_USER_POOL_ID = "eu-central-1_SkJskob5v"
-CONF_EMAIL = "email"
 CONF_ID_TOKEN = "id_token"
 CONF_REFRESH_TOKEN = "refresh_token"
+CONF_EMAIL = "email"
+CONF_API_KEY = "api_key"
+
+COGNITO_REGION = "eu-central-1"
+COGNITO_USER_POOL_ID = "eu-central-1_SkJskob5v"
+# Android-app client from the APK (different from the portal client).
+COGNITO_APP_CLIENT_ID = "1mfb3lbc4hqu34pd3tf8lmibn"
+COGNITO_AUTH_FLOW = "USER_SRP_AUTH"
