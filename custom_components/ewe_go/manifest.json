@@ -1,13 +1,15 @@
 {
   "domain": "ewe_go",
   "name": "EWE Go",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "documentation": "https://github.com/DrLippe/homeassistant-ewe-go",
   "issue_tracker": "https://github.com/DrLippe/homeassistant-ewe-go/issues",
   "codeowners": [
     "@DrLippe"
   ],
   "config_flow": true,
-  "requirements": [],
+  "requirements": [
+    "pycognito==2024.5.1"
+  ],
   "iot_class": "cloud_polling"
 }
