@@ -6,7 +6,8 @@
         "description": "Sign in using AWS Cognito SRP.",
         "data": {
           "email": "Email address",
-          "password": "Password"
+          "password": "Password",
+          "api_key": "Android API key"
         }
       }
     },
