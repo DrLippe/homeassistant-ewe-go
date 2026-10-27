@@ -8,3 +8,7 @@ COGNITO_REGION = "eu-central-1"
 COGNITO_APP_CLIENT_ID = "6eqi7k9jed2q0v8afbejv87qtu"
 COGNITO_AUTH_FLOW = "USER_SRP_AUTH"
 # User Pool ID must be identified before implementing SRP's password-claim proof.
+COGNITO_USER_POOL_ID = "eu-central-1_SkJskob5v"
+CONF_EMAIL = "email"
+CONF_ID_TOKEN = "id_token"
+CONF_REFRESH_TOKEN = "refresh_token"
