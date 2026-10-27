@@ -1,9 +1,12 @@
 """Polling for EWE Go."""
+import logging
 from datetime import datetime, timedelta
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from .api import EweGoApiError, EweGoAuthenticationError
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 class EweGoCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, client, entry):
@@ -28,6 +31,7 @@ class EweGoCoordinator(DataUpdateCoordinator):
             history = sorted(self._history, key=lambda x: str(x.get("startTime") or ""), reverse=True)
             return {"active": active, "history": history, "latest": history[0] if history else None}
         except EweGoAuthenticationError as exc:
-            raise ConfigEntryAuthFailed("EWE Go token expired or rejected") from exc
+            _LOGGER.warning("EWE Go authentication stage failed: %s", str(exc))
+            raise ConfigEntryAuthFailed(str(exc)) from exc
         except EweGoApiError as exc:
             raise UpdateFailed(str(exc)) from exc
