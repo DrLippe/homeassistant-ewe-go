@@ -3,14 +3,15 @@
     "step": {
       "user": {
         "title": "EWE Go",
-        "description": "Experimentell: gültigen API-Bearer-Token eingeben. Die automatische Anmeldung ist noch nicht implementiert.",
+        "description": "Anmeldung mit E-Mail und Passwort (Cognito SRP).",
         "data": {
-          "access_token": "Zugriffstoken"
+          "email": "E-Mail-Adresse",
+          "password": "Passwort"
         }
       }
     },
     "error": {
-      "invalid_auth": "Ungültiger Token"
+      "cannot_connect": "Anmeldung fehlgeschlagen. Bitte Zugangsdaten und mögliche Zusatzbestätigungen prüfen."
     }
   }
 }
