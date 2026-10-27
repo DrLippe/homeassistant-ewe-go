@@ -1,7 +1,7 @@
 {
   "domain": "ewe_go",
   "name": "EWE Go",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "documentation": "https://github.com/DrLippe/homeassistant-ewe-go",
   "issue_tracker": "https://github.com/DrLippe/homeassistant-ewe-go/issues",
   "codeowners": [
