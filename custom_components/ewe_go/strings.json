@@ -3,14 +3,15 @@
     "step": {
       "user": {
         "title": "EWE Go",
-        "description": "Experimental: enter a valid API bearer token. Automatic login is not implemented.",
+        "description": "Sign in using AWS Cognito SRP.",
         "data": {
-          "access_token": "Access token"
+          "email": "Email address",
+          "password": "Password"
         }
       }
     },
     "error": {
-      "invalid_auth": "Invalid token"
+      "cannot_connect": "Could not sign in; check credentials or additional authentication challenges."
     }
   }
 }
