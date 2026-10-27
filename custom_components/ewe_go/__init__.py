@@ -3,7 +3,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from .api import EweGoClient
-from .const import DOMAIN, CONF_EMAIL, CONF_ACCESS_TOKEN, CONF_ID_TOKEN, CONF_REFRESH_TOKEN
+from .const import DOMAIN, CONF_EMAIL, CONF_ACCESS_TOKEN, CONF_ID_TOKEN, CONF_REFRESH_TOKEN, CONF_API_KEY
 from .coordinator import EweGoCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -13,9 +13,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tokens = {k: entry.data[k] for k in (CONF_ACCESS_TOKEN, CONF_ID_TOKEN, CONF_REFRESH_TOKEN)}
         def save_tokens(new_tokens):
             hass.config_entries.async_update_entry(entry, data={**entry.data, **new_tokens})
-        client = EweGoClient(entry.data[CONF_ACCESS_TOKEN], email=entry.data[CONF_EMAIL], tokens=tokens, update_tokens=save_tokens)
+        client = EweGoClient(entry.data[CONF_ACCESS_TOKEN], email=entry.data[CONF_EMAIL], tokens=tokens, update_tokens=save_tokens, api_key=entry.data.get(CONF_API_KEY))
     else:
-        client = EweGoClient(entry.data[CONF_ACCESS_TOKEN])
+        client = EweGoClient(entry.data[CONF_ACCESS_TOKEN], api_key=entry.data.get(CONF_API_KEY))
     coordinator = EweGoCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
