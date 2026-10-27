@@ -30,10 +30,12 @@ class EweGoAuthenticationError(EweGoApiError):
     """Authentication failed."""
 
 class EweGoClient:
-    """Client with externally supplied access token (no unverified login flow)."""
+    """Client with Cognito authentication and token renewal."""
 
     def __init__(self, token: str, *, email=None, tokens=None, update_tokens=None) -> None:
-        self._token = token
+        # GraphQL gateways commonly use the ID token for user authorization.
+        # Prefer it for Cognito sessions; retain legacy manual bearer tokens.
+        self._token = (tokens or {}).get("id_token") or token
         self._email = email
         self._tokens = tokens
         self._update_tokens = update_tokens
@@ -44,10 +46,10 @@ class EweGoClient:
         try:
             new_tokens = await renew(self._email, self._tokens)
         except Exception as exc:
-            raise EweGoAuthenticationError("Cognito token refresh failed") from exc
+            raise EweGoAuthenticationError("Cognito token renewal failed") from exc
         if new_tokens != self._tokens:
             self._tokens = new_tokens
-            self._token = new_tokens["access_token"]
+            self._token = new_tokens["id_token"]
             if self._update_tokens:
                 self._update_tokens(new_tokens)
 
@@ -63,7 +65,7 @@ class EweGoClient:
                 result = json.load(response)
         except urllib.error.HTTPError as exc:
             if exc.code in (401, 403):
-                raise EweGoAuthenticationError("Access token rejected") from exc
+                raise EweGoAuthenticationError(f"EWE Go backend rejected the authorization token (HTTP {exc.code})") from exc
             raise EweGoApiError(f"HTTP status {exc.code}") from exc
         except (urllib.error.URLError, TimeoutError, ValueError) as exc:
             raise EweGoApiError("EWE Go request failed") from exc
