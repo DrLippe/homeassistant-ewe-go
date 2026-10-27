@@ -4,11 +4,13 @@ Queries were reconstructed from APK field names; server compatibility is unverif
 """
 from __future__ import annotations
 import asyncio
+import time
 import json
 import urllib.error
 import urllib.request
 from .const import API_URL
 from .auth import renew
+from .permissions import exchange_token, PermissionsError, PermissionsUnauthorized
 
 ACTIVE_QUERY = "query GetActiveChargingSession { getActiveSession { id status } }"
 SESSION_QUERY = """query ChargingSession($id: ID!) {
@@ -33,25 +35,41 @@ class EweGoClient:
     """Client with Cognito authentication and token renewal."""
 
     def __init__(self, token: str, *, email=None, tokens=None, update_tokens=None) -> None:
-        # GraphQL gateways commonly use the ID token for user authorization.
-        # Prefer it for Cognito sessions; retain legacy manual bearer tokens.
-        self._token = (tokens or {}).get("id_token") or token
+        # Legacy entries use their manually entered token; Cognito sessions exchange it.
+        self._token = token
         self._email = email
         self._tokens = tokens
         self._update_tokens = update_tokens
+        self._permissions_token = None
+        self._permissions_expiration = 0
+        self._token_lock = asyncio.Lock()
 
     async def _ensure_token(self):
+        """Refresh Cognito and exchange the tenant token if required."""
         if self._tokens is None:
             return
-        try:
-            new_tokens = await renew(self._email, self._tokens)
-        except Exception as exc:
-            raise EweGoAuthenticationError("Cognito token renewal failed") from exc
-        if new_tokens != self._tokens:
-            self._tokens = new_tokens
-            self._token = new_tokens["id_token"]
-            if self._update_tokens:
-                self._update_tokens(new_tokens)
+        async with self._token_lock:
+            try:
+                new_tokens = await renew(self._email, self._tokens)
+            except Exception as exc:
+                raise EweGoAuthenticationError("Cognito token renewal failed") from exc
+            if new_tokens != self._tokens:
+                self._tokens = new_tokens
+                self._permissions_token = None
+                self._permissions_expiration = 0
+                if self._update_tokens:
+                    self._update_tokens(new_tokens)
+            if self._permissions_token and time.monotonic() < self._permissions_expiration:
+                return
+            try:
+                token, expiry = await exchange_token(self._tokens["id_token"])
+            except PermissionsUnauthorized as exc:
+                raise EweGoAuthenticationError(str(exc)) from exc
+            except PermissionsError as exc:
+                raise EweGoApiError(str(exc)) from exc
+            self._permissions_token = token
+            self._permissions_expiration = expiry
+            self._token = token
 
     def _request(self, query: str, variables: dict | None = None) -> dict:
         payload = json.dumps({"query": query, "variables": variables or {}}).encode()
