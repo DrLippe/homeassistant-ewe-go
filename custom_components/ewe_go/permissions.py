@@ -5,6 +5,7 @@ The endpoint and response fields were observed in the EWE Go web portal.
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import time
 import urllib.error
@@ -22,6 +23,21 @@ class PermissionsError(Exception):
 class PermissionsUnauthorized(PermissionsError):
     """Cognito credential was rejected by permissions service."""
 
+
+def _remaining_jwt_lifetime(token: str) -> float | None:
+    """Read JWT exp only as an upper bound on the local cache lifetime."""
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return None
+        encoded = parts[1]
+        payload = json.loads(base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)))
+        exp = payload.get("exp")
+        if isinstance(exp, bool) or not isinstance(exp, (int, float)):
+            return None
+        return max(0.0, float(exp) - time.time())
+    except (ValueError, TypeError, UnicodeError):
+        return None
 
 def _exchange(cognito_bearer: str) -> tuple[str, float]:
     request = urllib.request.Request(
@@ -56,8 +72,14 @@ def _exchange(cognito_bearer: str) -> tuple[str, float]:
         raise PermissionsError("Permissions service returned invalid expiry") from None
     if ttl_seconds <= 0:
         raise PermissionsError("Permissions service returned an expired token")
-    # Cache safely and renew before expiry; monotonic protects against clock changes.
-    return token, time.monotonic() + max(0, ttl_seconds - min(300, ttl_seconds * 0.1))
+    remaining = _remaining_jwt_lifetime(token)
+    if remaining is not None:
+        ttl_seconds = min(ttl_seconds, remaining)
+    if ttl_seconds <= 0:
+        raise PermissionsError("Permissions service returned an expired JWT")
+    # The JWT payload is not used to authorize; it only shortens cache lifetime.
+    buffer = min(300.0, ttl_seconds * 0.1)
+    return token, time.monotonic() + max(0.0, ttl_seconds - buffer)
 
 
 async def exchange_token(cognito_bearer: str) -> tuple[str, float]:
