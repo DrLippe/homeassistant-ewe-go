@@ -1,0 +1,13 @@
+{
+  "domain": "ewe_go",
+  "name": "EWE Go",
+  "version": "0.1.0",
+  "documentation": "https://github.com/DrLippe/homeassistant-ewe-go",
+  "issue_tracker": "https://github.com/DrLippe/homeassistant-ewe-go/issues",
+  "codeowners": [
+    "@DrLippe"
+  ],
+  "config_flow": true,
+  "requirements": [],
+  "iot_class": "cloud_polling"
+}
