@@ -8,10 +8,13 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+ACTIVE_POLL_INTERVAL = timedelta(seconds=30)
+IDLE_POLL_INTERVAL = timedelta(minutes=5)
+
 class EweGoCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, client, entry):
-        super().__init__(hass, logger=__import__("logging").getLogger(__name__), name=DOMAIN,
-                         update_interval=timedelta(seconds=30))
+        super().__init__(hass, logger=_LOGGER, name=DOMAIN,
+                         update_interval=IDLE_POLL_INTERVAL)
         self.client, self.entry = client, entry
         self._history = []
         self._history_month = None
@@ -19,6 +22,9 @@ class EweGoCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             active = await self.client.active_session()
+            # DataUpdateCoordinator schedules the next refresh using this interval.
+            # An active session gets faster updates; otherwise reduce API traffic.
+            self.update_interval = ACTIVE_POLL_INTERVAL if active else IDLE_POLL_INTERVAL
             now = datetime.now()
             month = (now.year, now.month)
             # Refresh history hourly, or on first load or session completion.
